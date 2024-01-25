@@ -19,28 +19,27 @@ const uint8_t znak[10] = {
 
 void portInit(){
 	//TODO: Encoder, Sensor
-	DDRB = 0x07;
-	DDRC = 0xFF;
-	PORTB = 0x07;
+	DDRB = 0x06;
+	DDRC = 0xFE;
+	DDRD = 0xE0;
+	PORTB = 0x00;
 	PORTC = 0x00;
+	PORTD = 0xE0;
 }
 
 void printDisp(uint16_t dig){
 	uint8_t d;
 	uint8_t s;
 	uint8_t f = 0x00;
-	for(s=0;s<4;s++){
+	for(s=0;s<3;s++){
 		switch (s) {
 			case 0:
-			d = dig/1000;
-			break;
-			case 1:
 			d = (dig/100)%10;
 			break;
-			case 2:
+			case 1:
 			d = (dig/10)%10;
 			break;
-			case 3:
+			case 2:
 			d = dig%10;
 			break;
 		}
@@ -64,10 +63,10 @@ int main(void){
 }
 
 ISR(TIMER2_COMPA_vect){
-	static uint8_t r = 0b00000001;
+	static uint8_t r = 0b00100000;
 	static uint8_t s;
 	PORTC = arrayChar[s];
-	PORTB = ~r;
-	r = r == 0b00000100 ? 0b00000001 : r << 1;
+	PORTD = ~r;
+	r = r == 0b10000000 ? 0b00100000 : r << 1;
 	s = s == 2 ? 0 : s + 1;
 }
