@@ -18,6 +18,7 @@ const uint8_t znak[10] = {
 };
 
 void portInit(){
+	ADCSRA = 0x80;
 	//TODO: Encoder, Sensor
 	DDRB = 0x06;
 	DDRC = 0xFE;
@@ -57,6 +58,7 @@ int main(void){
 	portInit();
 	timer2Init_freq(300);
 	sei();
+	printDisp(280);
 	
     while (1){
     }
