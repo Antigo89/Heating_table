@@ -10,7 +10,8 @@
  * UART: not use (Rx: PD0, Tx: PD1)
  * Zero crossing: PC814 <- 2W10 (INT0: PD2)
  * Control: Encoder (DW: PD3, CLK: PD4)
- * Display: 7H x3 BC12-GWA (Katode: PD5-PD7, Anode: PC0-PC6)
+ * Display: 7H x3 BC12-GWA (Katode(GND): PD5-PD7, Anode(VCC): 74H595N Q0-Q7)
+ * Register: 74H595N (Q0-Q7: Anode Display, SH_CP/CLK: PC3, ST_CP/SET: PC2, DS/DATA: PC1) 
  */
 
 #ifndef MAIN_H
@@ -19,6 +20,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/eeprom.h>
+#include <avr/delay.h>
 /*
 #include "ds18.h"
 #include "encoderInterrupt.h"
