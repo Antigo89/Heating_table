@@ -1,17 +1,19 @@
-
 #include "main.h"
+
+#define TEST
 
 uint8_t arrayChar[3] = {0,0,0};
 
 volatile uint8_t raz = 0b00100000;
 volatile uint8_t seg;
 
-volatile uint16_t temperature_set;
-volatile uint16_t temperature_cur;
- 
+uint8_t temp_set_l EEMEM;
+uint8_t temp_set_h EEMEM;
 
 volatile uint8_t flagDisp = 0;
 volatile uint8_t flag_enc = 0;
+
+uint16_t time_delay = 0;
 
 const uint8_t znak[10] = {
 	/*Dp,G,F,E,D,C,B,A*/
@@ -89,22 +91,50 @@ void outputDisp(){
 		flagDisp = 0;
 }
 
+void write_temp(uint16_t temperature){
+	uint8_t two = (temperature  & 0xFF);
+	uint8_t one = ((temperature >> 8) & 0xFF);
+	eeprom_write_byte(&temp_set_l, two);
+	eeprom_write_byte(&temp_set_h, one);
+}
+
 int main(void){
+	uint16_t temperatures[2] = {100, 100};
+	
 	portInit();
 	encInit(MAX_TEMP);
 	timer2Init_freq(300);
 	sei();
-	temperature_set = START_TEMP;
+	//write_temp(300);
+	uint8_t cursor = 1;
+	uint16_t temp_eeprom;
+	uint16_t temp_eeprom_16;
+	temp_eeprom = eeprom_read_byte(&temp_set_h);
+	temp_eeprom_16 = eeprom_read_byte(&temp_set_l);
+	temp_eeprom_16 = temp_eeprom_16 + ((temp_eeprom << 8) & 0xFFFF);
+	if(temp_eeprom_16 > MAX_TEMP) temp_eeprom_16 = START_TEMP;
+	
+	temperatures[SET] = temp_eeprom_16;
 
 	while (1){
 		if(flag_enc > 2){
-			encClick(&temperature_set);
+			if(encClick(&temperatures[SET])) cursor = 1;
 			flag_enc = 0;
 		}
 		
 		if(flagDisp > 0){
-			printDisp(temperature_set);
+			printDisp(temperatures[cursor]);
 			outputDisp();
+		}
+		if(time_delay > delay_autoout){
+			if(cursor>0){
+				#ifndef TEST
+				write_temp(temperatures[SET]);
+				#endif
+				cursor = 0;
+				//printDisp(temperatures[cursor]);
+			}
+			time_delay = 0;
 		}
 		
     }
@@ -113,4 +143,5 @@ int main(void){
 ISR(TIMER2_COMPA_vect){
 	flagDisp++;
 	flag_enc++;
+	time_delay++;
 }

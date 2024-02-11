@@ -36,4 +36,8 @@
 #define START_TEMP 200
 #define MAX_TEMP 400
 
+//array temperature[]
+#define CURRENT 0
+#define SET 1
+
 #endif

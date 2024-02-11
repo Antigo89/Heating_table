@@ -33,20 +33,24 @@ void encInit(uint16_t max_temp){
 	max_count = max_temp;
 }
 
-void encClick(uint16_t *count){
+uint8_t encClick(uint16_t *count){
+	uint8_t flag = 0;
 	curStat = PINN & mask;
 	
 	if(curStat != prevStat){
 		cli();
 		if((prevStat == mask) && (curStat&(1<<DW_PIN)) && !(curStat&(1<<CLK_PIN))){
 			if(*count < max_count) *count = *count + 1;
+			flag = 1;
 		}
 		if((prevStat == mask) && (curStat&(1<<CLK_PIN)) && !(curStat&(1<<DW_PIN))){
 			if(*count > 0) *count = *count - 1;
+			flag = 1;
 		}
 		sei();
 		prevStat = curStat;
 	}
+	return flag;
 }
 
 
