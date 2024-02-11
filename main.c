@@ -6,7 +6,12 @@ uint8_t arrayChar[3] = {0,0,0};
 volatile uint8_t raz = 0b00100000;
 volatile uint8_t seg;
 
+volatile uint16_t temperature_set;
+volatile uint16_t temperature_cur;
+ 
+
 volatile uint8_t flagDisp = 0;
+volatile uint8_t flag_enc = 0;
 
 const uint8_t znak[10] = {
 	/*Dp,G,F,E,D,C,B,A*/
@@ -22,15 +27,17 @@ const uint8_t znak[10] = {
 	0b01101111 //0x6F
 };
 
+
+
 void portInit(){
 	ADCSRA = 0x80;
-	//TODO: Encoder, Sensor
+	//TODO: Sensor
 	DDRB = 0x06;
 	DDRC = 0xFE;
 	DDRD = 0xE0;
 	PORTB = 0x00;
 	PORTC = 0x00;
-	PORTD = 0xE0;
+	PORTD = 0xE0;	
 }
 
 void printDisp(uint16_t dig){
@@ -84,14 +91,19 @@ void outputDisp(){
 
 int main(void){
 	portInit();
+	encInit(MAX_TEMP);
 	timer2Init_freq(300);
 	sei();
-	printDisp(280);
-	
+	temperature_set = START_TEMP;
 
 	while (1){
+		if(flag_enc > 2){
+			encClick(&temperature_set);
+			flag_enc = 0;
+		}
 		
-		if(flagDisp = 1){
+		if(flagDisp > 0){
+			printDisp(temperature_set);
 			outputDisp();
 		}
 		
@@ -99,13 +111,6 @@ int main(void){
 }
 
 ISR(TIMER2_COMPA_vect){
-	flagDisp = 1;
-	/*
-	static uint8_t r = 0b00100000;
-	static uint8_t s;
-	PORTC = arrayChar[s];
-	PORTD = ~r;
-	r = r == 0b10000000 ? 0b00100000 : r << 1;
-	s = s == 2 ? 0 : s + 1;
-	*/
+	flagDisp++;
+	flag_enc++;
 }

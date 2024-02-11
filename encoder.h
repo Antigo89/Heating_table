@@ -23,21 +23,23 @@ ISR(TIMER1_COMPA_vect){
 
 uint8_t curStat = 0x00;
 uint8_t prevStat = 0x00;
-uint8_t volatile mask = 0x00;
+volatile uint8_t  mask = 0x00;
+volatile max_count = 255;
 
-void encInit(){
+void encInit(uint16_t max_temp){
 	DDRN &= ~((1<<CLK_PIN)|(1<<DW_PIN));
 	PORTN |= (1<<CLK_PIN)|(1<<DW_PIN);
 	mask |= (1<<DW_PIN)|(1<<CLK_PIN);
+	max_count = max_temp;
 }
 
-void encClick(uint8_t *count){
+void encClick(uint16_t *count){
 	curStat = PINN & mask;
 	
 	if(curStat != prevStat){
 		cli();
 		if((prevStat == mask) && (curStat&(1<<DW_PIN)) && !(curStat&(1<<CLK_PIN))){
-			if(*count < 255) *count = *count + 1;
+			if(*count < max_count) *count = *count + 1;
 		}
 		if((prevStat == mask) && (curStat&(1<<CLK_PIN)) && !(curStat&(1<<DW_PIN))){
 			if(*count > 0) *count = *count - 1;

@@ -23,11 +23,14 @@
 #include <avr/delay.h>
 /*
 #include "ds18.h"
-#include "encoderInterrupt.h"
 */
+#include "encoder.h"
 #include "timer2CTC.h"
 
 #define F_CPU 16000000UL
+
+#define START_TEMP 200
+#define MAX_TEMP 400
 
 // ms
 #define t_bounce 100
