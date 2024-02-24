@@ -24,6 +24,7 @@
 
 #include "encoder.h"
 #include "timer2CTC.h"
+#include "SPI.h"
 
 #define F_CPU 16000000UL
 
@@ -31,10 +32,11 @@
 #define t_bounce 100
 
 // 1/300 sec
-#define delay_autoout 1500 //5sec
+#define delay_autoout 900 //3sec
 
 #define START_TEMP 200
 #define MAX_TEMP 400
+#define TIME_MEASURE 80 //260 ms
 
 //array temperature[]
 #define CURRENT 0

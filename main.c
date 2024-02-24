@@ -12,6 +12,7 @@ uint8_t temp_set_h EEMEM;
 
 volatile uint8_t flagDisp = 0;
 volatile uint8_t flag_enc = 0;
+volatile uint8_t flag_measure = 0;
 
 uint16_t time_delay = 0;
 
@@ -71,16 +72,16 @@ void printDisp(uint16_t dig){
 void outputDisp(){
 		uint8_t mask = 0x80;
 		uint8_t k = 0;
-		PORTC &= ~(1 << PORTC2); //ST 0
-		for(k = 0; k < 8; k++){
+		PORTC &= ~(1<<PORTC2); //ST 0
+		for(k = 0; k<8; k++){
 			if(arrayChar[seg] & mask){
-				PORTC |= (1 << PORTC1); // DATA 1
-				PORTC |= (1 << PORTC3); // CLK 1
-				PORTC &= ~(1 << PORTC3); // CLK 0
+				PORTC |= (1<<PORTC1); // DATA 1
+				PORTC |= (1<<PORTC3); // CLK 1
+				PORTC &= ~(1<<PORTC3); // CLK 0
 			}else{
-				PORTC &= ~(1 << PORTC1); // DATA 0
-				PORTC |= (1 << PORTC3); // CLK 1
-				PORTC &= ~(1 << PORTC3); // CLK 0
+				PORTC &= ~(1<<PORTC1); // DATA 0
+				PORTC |= (1<<PORTC3); // CLK 1
+				PORTC &= ~(1<<PORTC3); // CLK 0
 			}
 			mask = mask >> 1;
 		}
@@ -92,16 +93,37 @@ void outputDisp(){
 }
 
 void write_temp(uint16_t temperature){
-	uint8_t two = (temperature  & 0xFF);
+	uint8_t two = (temperature&0xFF);
 	uint8_t one = ((temperature >> 8) & 0xFF);
 	eeprom_write_byte(&temp_set_l, two);
 	eeprom_write_byte(&temp_set_h, one);
 }
 
+uint16_t measure_temperature(){
+	PORTB &= ~(1<<PORTB2);
+	_delay_ms(1);
+	uint16_t tmp_16 = SPIWrite(0x00);
+	tmp_16 <<= 8;
+	tmp_16 |= SPIWrite(0x00);
+	
+		if(!(tmp_16&0x04)){
+			tmp_16 >>= 3;
+			tmp_16 /= 4;			
+		}else{
+			tmp_16 = 1;
+		}
+	
+	PORTB |= (1<<PORTB2);
+	//_delay_ms(10);
+	return tmp_16;
+}
+
 int main(void){
+
 	uint16_t temperatures[2] = {100, 100};
 	
 	portInit();
+	SPIMasterInit();
 	encInit(MAX_TEMP);
 	timer2Init_freq(300);
 	sei();
@@ -113,12 +135,19 @@ int main(void){
 	temp_eeprom_16 = eeprom_read_byte(&temp_set_l);
 	temp_eeprom_16 = temp_eeprom_16 + ((temp_eeprom << 8) & 0xFFFF);
 	if(temp_eeprom_16 > MAX_TEMP) temp_eeprom_16 = START_TEMP;
-	
 	temperatures[SET] = temp_eeprom_16;
-
+	
 	while (1){
+		if(flag_measure > TIME_MEASURE){
+			temperatures[CURRENT] = measure_temperature();
+			flag_measure = 0;
+		}
+		
 		if(flag_enc > 2){
-			if(encClick(&temperatures[SET])) cursor = 1;
+			if(encClick(&temperatures[SET])){
+				cursor = SET;
+				time_delay = 0;
+			}
 			flag_enc = 0;
 		}
 		
@@ -126,14 +155,22 @@ int main(void){
 			printDisp(temperatures[cursor]);
 			outputDisp();
 		}
-		if(time_delay > delay_autoout){
-			if(cursor>0){
+
+		if(time_delay>delay_autoout){
+			if(cursor>CURRENT){
 				#ifndef TEST
 				write_temp(temperatures[SET]);
 				#endif
-				cursor = 0;
+				cursor = CURRENT;
 				//printDisp(temperatures[cursor]);
 			}
+			time_delay = 0;
+		}
+		
+		if(!(PINB&(1<<PINB0))){
+			//test function
+			temperatures[SET] = 300;
+			cursor = SET;
 			time_delay = 0;
 		}
 		
@@ -144,4 +181,5 @@ ISR(TIMER2_COMPA_vect){
 	flagDisp++;
 	flag_enc++;
 	time_delay++;
+	flag_measure++;
 }
