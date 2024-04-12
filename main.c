@@ -30,8 +30,6 @@ const uint8_t znak[10] = {
 	0b01101111 //0x6F
 };
 
-
-
 void portInit(){
 	ADCSRA = 0x80;
 	//TODO: Sensor

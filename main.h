@@ -25,6 +25,7 @@
 #include "encoder.h"
 #include "timer2CTC.h"
 #include "SPI.h"
+#include "easy_PID.h"
 
 #define F_CPU 16000000UL
 
