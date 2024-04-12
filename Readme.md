@@ -1,7 +1,7 @@
 <h2>Software "Heating table"</h2>
 
 <div id="badges" align="center">
-    <img alt="Static Badge" src="https://img.shields.io/badge/Version%20-0.1%20-violet">
+    <img alt="Static Badge" src="https://img.shields.io/badge/Version%20-0.2%20-violet">
     <img alt="Static Badge" src="https://img.shields.io/badge/CPU%20-ATMega328p%20-blue">
     <img alt="Static Badge" src="https://img.shields.io/badge/License%20-MIT%20-red">
 </div>
