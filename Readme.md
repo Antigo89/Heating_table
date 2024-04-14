@@ -24,5 +24,6 @@ Makefile is used for compilation and firmware (for help enter: >>make help).
 Assemble the project using the "make" instructions.
 
 <b>Download:</b>
-Connect the "USB ASP" programmer to the ISP connector on the controller board and to a free USB port on the computer.
-Use the "make flash" instruction to load the software into the controller's memory.
+Disconnect the MAX6675 from the SPI (open jumper). Connect the "USB ASP" programmer to the ISP connector on the controller board and to a free USB port on the computer.
+Use the "make flash" instruction to load the software into the controller's memory. 
+Return the jumpers to their place.
