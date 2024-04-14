@@ -24,7 +24,7 @@ ISR(TIMER1_COMPA_vect){
 uint8_t curStat = 0x00;
 uint8_t prevStat = 0x00;
 volatile uint8_t  mask = 0x00;
-volatile max_count = 255;
+volatile uint8_t max_count = 255;
 
 void encInit(uint16_t max_temp){
 	DDRN &= ~((1<<CLK_PIN)|(1<<DW_PIN));

@@ -20,7 +20,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/eeprom.h>
-#include <avr/delay.h>
+#include <util/delay.h>
 
 #include "encoder.h"
 #include "timer2CTC.h"
@@ -28,6 +28,12 @@
 #include "easy_PID.h"
 
 #define F_CPU 16000000UL
+//settings PID
+#define Kp  4.0
+#define Ki  0.5
+#define Kd  0.05
+#define MAX_OUTPUT_PID 1023
+#define PID_period 30 //100ms
 
 // ms
 #define t_bounce 100

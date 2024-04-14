@@ -13,6 +13,7 @@ uint8_t temp_set_h EEMEM;
 volatile uint8_t flagDisp = 0;
 volatile uint8_t flag_enc = 0;
 volatile uint8_t flag_measure = 0;
+volatile uint16_t flag_pid = 0;
 
 uint16_t time_delay = 0;
 
@@ -41,9 +42,16 @@ void portInit(){
 	PORTD = 0xE0;	
 }
 
+void pwmInit(){
+	DDRB |= (1<<DDB1);
+	TCCR1A |= (1<<WGM11)|(1<<WGM10)|(1<<COM1A1);
+	TCCR1B |= (1<<WGM12)|(1<<CS10)|(1<<CS11);
+	OCR1A = 0;
+}
+
 void printDisp(uint16_t dig){
-	uint8_t d;
-	uint8_t s;
+	uint8_t d = 0;
+	uint8_t s = 0;
 	uint8_t f = 0x00;
 	for(s=0;s<3;s++){
 		switch (s) {
@@ -121,6 +129,7 @@ int main(void){
 	uint16_t temperatures[2] = {100, 100};
 	
 	portInit();
+	pwmInit();
 	SPIMasterInit();
 	encInit(MAX_TEMP);
 	timer2Init_freq(300);
@@ -134,13 +143,11 @@ int main(void){
 	temp_eeprom_16 = temp_eeprom_16 + ((temp_eeprom << 8) & 0xFFFF);
 	if(temp_eeprom_16 > MAX_TEMP) temp_eeprom_16 = START_TEMP;
 	temperatures[SET] = temp_eeprom_16;
+	//settings PID
+	set_limits(0, MAX_OUTPUT_PID);
+	set_k(Kp, Ki, Kd);
 	
 	while (1){
-		if(flag_measure > TIME_MEASURE){
-			temperatures[CURRENT] = measure_temperature();
-			flag_measure = 0;
-		}
-		
 		if(flag_enc > 2){
 			if(encClick(&temperatures[SET])){
 				cursor = SET;
@@ -153,17 +160,30 @@ int main(void){
 			printDisp(temperatures[cursor]);
 			outputDisp();
 		}
+		
+		if(flag_measure > TIME_MEASURE){
+			temperatures[CURRENT] = measure_temperature();
+			flag_measure = 0;
+		}
+				
+		if(flag_pid > PID_period){
+			OCR1A = (uint16_t)stepPID(temperatures[CURRENT]);
+			flag_pid = 0;
+		}
 
 		if(time_delay>delay_autoout){
 			if(cursor>CURRENT){
 				#ifndef TEST
 				write_temp(temperatures[SET]);
 				#endif
+				set_setpoint(temperatures[SET]);
 				cursor = CURRENT;
 				//printDisp(temperatures[cursor]);
 			}
 			time_delay = 0;
 		}
+		
+		
 		
 		if(!(PINB&(1<<PINB0))){
 			//test function
@@ -180,4 +200,5 @@ ISR(TIMER2_COMPA_vect){
 	flag_enc++;
 	time_delay++;
 	flag_measure++;
+	flag_pid++;
 }
