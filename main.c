@@ -132,9 +132,9 @@ int main(void){
 	pwmInit();
 	SPIMasterInit();
 	encInit(MAX_TEMP);
-	timer2Init_freq(300);
+	timer2Init_freq(F_TIM);
 	sei();
-	//write_temp(300);
+	//write_temp(300); 
 	uint8_t cursor = 1;
 	uint16_t temp_eeprom;
 	uint16_t temp_eeprom_16;
@@ -144,11 +144,11 @@ int main(void){
 	if(temp_eeprom_16 > MAX_TEMP) temp_eeprom_16 = START_TEMP;
 	temperatures[SET] = temp_eeprom_16;
 	//settings PID
-	set_limits(0, MAX_OUTPUT_PID);
 	set_k(Kp, Ki, Kd);
+	set_limits(0, MAX_OUTPUT_PID);
 	
 	while (1){
-		if(flag_enc > 2){
+		if(flag_enc > ENCODER_PERIOD){
 			if(encClick(&temperatures[SET])){
 				cursor = SET;
 				time_delay = 0;
@@ -156,7 +156,7 @@ int main(void){
 			flag_enc = 0;
 		}
 		
-		if(flagDisp > 0){
+		if(flagDisp > DISPLAY_FREQUENCY){
 			printDisp(temperatures[cursor]);
 			outputDisp();
 		}
@@ -166,12 +166,12 @@ int main(void){
 			flag_measure = 0;
 		}
 				
-		if(flag_pid > PID_period){
-			OCR1A = (uint16_t)stepPID(temperatures[CURRENT]);
+		if(flag_pid > PID_PERIOD){
+			OCR1A = 1023 - (uint16_t)stepPID(temperatures[CURRENT]);
 			flag_pid = 0;
 		}
 
-		if(time_delay>delay_autoout){
+		if(time_delay>DELAY_AUTOOUT){
 			if(cursor>CURRENT){
 				#ifndef TEST
 				write_temp(temperatures[SET]);
@@ -182,8 +182,7 @@ int main(void){
 			}
 			time_delay = 0;
 		}
-		
-		
+
 		
 		if(!(PINB&(1<<PINB0))){
 			//test function

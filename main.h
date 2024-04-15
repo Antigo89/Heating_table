@@ -26,24 +26,33 @@
 #include "timer2CTC.h"
 #include "SPI.h"
 #include "easy_PID.h"
-
+//Frequency settings
 #define F_CPU 16000000UL
-//settings PID
+#define F_TIM 300UL //Hz
+
+//PID settings
 #define Kp  4.0
 #define Ki  0.5
 #define Kd  0.05
 #define MAX_OUTPUT_PID 1023
-#define PID_period 30 //100ms
+#define USER_PID_PERIOD 100 //ms
+#define PID_PERIOD USER_PID_PERIOD / 1000 * F_TIM
 
-// ms
-#define t_bounce 100
+//Display settings
+#define USER_DISPLAY_FREQUENCY 300 //max 300HZ
+#define DISPLAY_FREQUENCY F_TIM / USER_DISPLAY_FREQUENCY - 1
+#define USER_DELAY_AUTOOUT 3000 //ms
+#define DELAY_AUTOOUT USER_DELAY_AUTOOUT / 1000 * F_TIM
 
-// 1/300 sec
-#define delay_autoout 900 //3sec
+//Encoder settings
+#define USER_ENCODER_PERIOD 100 //ms
+#define ENCODER_PERIOD USER_ENCODER_PERIOD / 1000 * F_TIM
 
+//Measurement settings 
 #define START_TEMP 200
 #define MAX_TEMP 400
-#define TIME_MEASURE 80 //260 ms
+#define USER_TIME_MEASURE 260 //ms
+#define TIME_MEASURE USER_TIME_MEASURE / 1000 * F_TIM
 
 //array temperature[]
 #define CURRENT 0

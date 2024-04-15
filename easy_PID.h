@@ -17,6 +17,7 @@ volatile float kd = 0.01;
 volatile uint16_t setpoint = 0;
 volatile int16_t max_output = 255;
 volatile int16_t min_output = 0;
+volatile int16_t integral_limit = 27000;
 //values
 volatile int16_t integral = 0;
 volatile int16_t last_error = 0;
@@ -43,6 +44,9 @@ int16_t stepPID(uint16_t sensor_value) {
 	
 	error = setpoint - sensor_value;
 	integral += error;
+	integral = (integral > integral_limit) ? integral_limit : integral;
+	integral = (integral < -integral_limit) ? -integral_limit : integral;
+	
 	derivative = error - last_error;
 	
 	int16_t kp_out = (int16_t)(kp * error);
