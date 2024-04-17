@@ -9,40 +9,35 @@ LFUSE=0xFC
 ISP=usbasp
 PORT=/dev/usb/ttyUSB0
 
-OBJECTS	=	main.o
+TARGET = main
 
-COMPILE	=	avr-gcc	-Wall	-Os	-DF_CPU=$(CLOCK)	-mmcu=$(DEVICE)
+# Add additional .c files here
+#OBJS = encoder.o easy_PID.o 
+SRCS = $(wildcard *.c)
+OBJS = $(SRCS:.c=.o)
 
-all:	main.hex
+COMPILE	=	avr-gcc	-Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
 
+# Set library paths
+LIBRARY_PATHS = -I C:\Program Files (x86)\WinAVR\avr\include
+
+all: $(TARGET).hex
+
+main.hex: $(TARGET).o $(OBJS)
+	rm -f $(TARGET).hex
+	avr-gcc -mmcu=$(DEVICE) -o $(TARGET).elf $(OBJS)
+	avr-objcopy -j .text -j .data -O ihex $(TARGET).elf $(TARGET).hex
+	avr-size --format=avr --mcu=$(DEVICE) $(TARGET).elf
+
+%.o: %.c
+	avr-gcc -g -Os -mmcu=$(DEVICE) -DF_CPU=$(CLOCK) -c $< -o $@
 .c.o:
 	$(COMPILE)	-c $<	-o $@
-
-.S.o:
-	$(COMPILE) -x assembler-with-cpp -c $< -o $@
-
-.c.s:
-	$(COMPILE) -S $< -o $@
-
-#flash:	all
-#	$(AVRDUDE) -U flash:w:main.hex:i
-
 clean:
-	rm -f main.hex main.elf $(OBJECTS)
+	rm -f *.o $(TARGET).elf $(TARGET).hex
 
-main.elf: $(OBJECTS)
-	$(COMPILE) -o main.elf $(OBJECTS)
-
-#main.bin:	$(OBJECTS)
-#	$(COMPILE) -o main.bin $(OBJECTS) -Wl,-Map,main.map
-	
-main.hex: main.elf
-	rm -f main.hex
-	avr-objcopy -j .text -j .data -O ihex main.elf main.hex
-	avr-size --format=avr --mcu=$(DEVICE) main.elf
-
-flash:
-	tools/avrdude -c$(ISP) -p$(DEVICE) -P$(PORT) -U flash:w:main.hex
+flash: $(TARGET).hex
+	tools/avrdude -c$(ISP) -p$(DEVICE) -P$(PORT) -U flash:w:$(TARGET).hex
 
 fuses_final:
 	tools/avrdude -c$(ISP) -p$(DEVICE) -P$(PORT) -u -U hfuse:w:$(HFUSE):m -U lfuse:w:$(LFUSE):m
