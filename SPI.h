@@ -1,12 +1,14 @@
-	/*
+/*
 Author: Antigo
 Mail: Antigo1989@gmail.com
-Date: 17.07.2021
-Version: 0.9
+Date: 18.04.2024
+Version: 1.0
 Compile library SPI interface for ATMega328p. Master device. Speed 1MHz.
 */
 #ifndef SPI_H
 #define SPI_H
+
+#include <avr/io.h>
 
 #define SPI_PORT 	PORTB
 #define SCK_POS 	5
@@ -16,38 +18,13 @@ Compile library SPI interface for ATMega328p. Master device. Speed 1MHz.
 #define SPI_DDR 	DDRB
 
 //Initialization SPI Master
-void SPIMasterInit(){
-	//MOSI SCK SS - outport
-	DDRB |=((1<<3)|(1<<5)|(1<<2));
-	//SS - '1'
-	PORTB |=(1<<2);
-	//Enable SPI, Master, sck = f/16 (1MHz)
-	SPCR|=(1<<SPE)|(1<<MSTR)|(1<<SPR0)|(1<<CPHA);
-
-}
+void SPIMasterInit();
 //Initialization SPI Slave
-void SPISlaveInit(){
-	//MISO - outport
-	DDRB |=(1<<4);
-	//Enable SPI
-	SPCR|=(1<<SPE);
-}
+void SPISlaveInit();
 //End connected SPI
-void SPIClose(){
-	SPCR &= ~(1<<SPE);
-	DDRB &= (~((1<<3)|(1<<5)));
-}
+void SPIClose();
 //Send 8bit to standart SS
-uint8_t SPIWrite(uint8_t data){
-	SPDR = data;
-	while(!(SPSR & (1<<SPIF)));
-	return (SPDR);
-}
+uint8_t SPIWrite(uint8_t data);
 //Selected SS(CS) to '0' when reading
-
-
-uint8_t SPIReadSlave(){
-   while(!(SPSR & (1 << SPIF)));
-   return SPDR;
-}
+//uint8_t SPIReadSlave();
 #endif

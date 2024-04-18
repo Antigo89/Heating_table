@@ -183,7 +183,6 @@ int main(void){
 			time_delay = 0;
 		}
 
-		
 		if(!(PINB&(1<<PINB0))){
 			//test function
 			temperatures[SET] = 300;

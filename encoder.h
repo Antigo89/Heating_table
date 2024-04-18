@@ -1,9 +1,9 @@
 /*
 Author: Antigo
 Mail: Antigo1989@gmail.com
-Date: 23.07.2021
-Version: 1.0
-Compile library for processing encoder. Connect to any PIN. 
+Date: 17.04.2024
+Version: 1.1
+Compile library for processing encoder. Connect to any PIN.
 Polling occurs by timer or in a custom cycle.
 Example:
 Optimal Timer 100Hz;
