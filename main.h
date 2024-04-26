@@ -25,17 +25,16 @@
 #include "encoder.h"
 #include "timer2CTC.h"
 #include "SPI.h"
-#include "easy_PID.h"
+#include "easy_PI.h"
 //Frequency settings
 #define F_CPU 16000000UL
 #define F_TIM 300UL //Hz
 
 //PID settings
-#define Kp  4.0
-#define Ki  0.5
-#define Kd  0.05
+#define Kp  5
 #define USER_PID_PERIOD 1000 //ms
 #define MAX_OUTPUT_PID 530
+#define MAX_TIM1 545
 
 //Display settings
 #define USER_DISPLAY_FREQUENCY 300 //max 300HZ

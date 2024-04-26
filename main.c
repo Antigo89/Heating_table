@@ -11,16 +11,13 @@ uint8_t temp_set_l EEMEM;
 uint8_t temp_set_h EEMEM;
 
 volatile uint8_t flagDisp = 0;
-uint8_t DISPLAY_FREQUENCY;
 volatile uint8_t flag_enc = 0;
-uint8_t ENCODER_PERIOD;
 volatile uint16_t flag_measure = 0;
-uint16_t TIME_MEASURE;
 volatile uint16_t flag_pid = 0;
-uint16_t PID_PERIOD;
 
 uint16_t time_delay = 0;
-uint16_t DELAY_AUTOOUT;
+
+volatile int16_t ocr_set = 0;
 
 const uint8_t znak[10] = {
 	/*Dp,G,F,E,D,C,B,A*/
@@ -53,8 +50,8 @@ void Tim1Init(){
 	DDRB |= (1<<DDB1);
 	TCCR1A = 0;
 	TCCR1B = 0;
-	OCR1A = 545;
-	OCR1B = 544;
+	OCR1A = MAX_TIM1;
+	OCR1B = MAX_TIM1 - 1;
 	TIMSK1 |= (1<<OCIE1A)|(1<<OCIE1B);
 }
 
@@ -159,8 +156,7 @@ int main(void){
 	temperatures[SET] = temp_eeprom_16;
 	printDisp(temperatures[SET]);
 	//settings PID
-	set_k(Kp, Ki, Kd);
-	set_limits(0, MAX_OUTPUT_PID);
+	set_k(Kp);
 	
 	while (1){
 		if(flag_enc > encoder_period){
@@ -186,7 +182,10 @@ int main(void){
 		}
 				
 		if(flag_pid > pid_period){
-			//OCR1A = 540 - (uint16_t)stepPID(temperatures[CURRENT]);
+			ocr_set += stepPI(temperatures[CURRENT]);
+			ocr_set = (ocr_set > MAX_OUTPUT_PID) ? MAX_OUTPUT_PID : ocr_set;
+			ocr_set = (ocr_set < 0) ? 0 : ocr_set;
+			OCR1B = 540 - (uint16_t)ocr_set;
 			flag_pid = 0;
 		}
 
@@ -220,7 +219,6 @@ ISR(TIMER2_COMPA_vect){
 	flag_measure++;
 	flag_pid++;
 }
-volatile uint16_t ocr_temp = 0;
 
 ISR(INT0_vect){
 	TCCR1B |= (1<<WGM12)|(1<<CS12);
