@@ -11,11 +11,16 @@ uint8_t temp_set_l EEMEM;
 uint8_t temp_set_h EEMEM;
 
 volatile uint8_t flagDisp = 0;
+uint8_t DISPLAY_FREQUENCY;
 volatile uint8_t flag_enc = 0;
-volatile uint8_t flag_measure = 0;
+uint8_t ENCODER_PERIOD;
+volatile uint16_t flag_measure = 0;
+uint16_t TIME_MEASURE;
 volatile uint16_t flag_pid = 0;
+uint16_t PID_PERIOD;
 
 uint16_t time_delay = 0;
+uint16_t DELAY_AUTOOUT;
 
 const uint8_t znak[10] = {
 	/*Dp,G,F,E,D,C,B,A*/
@@ -37,16 +42,20 @@ void portInit(){
 	DDRB = 0x06;
 	DDRC = 0xFE;
 	DDRD = 0xE0;
-	PORTB = 0x00;
+	PORTB = 0x04;
 	PORTC = 0x00;
 	PORTD = 0xE0;	
+	EICRA |= (1<<ISC01);
+	EIMSK |= (1<<INT0);
 }
 
-void pwmInit(){
+void Tim1Init(){
 	DDRB |= (1<<DDB1);
-	TCCR1A |= (1<<WGM11)|(1<<WGM10)|(1<<COM1A1);
-	TCCR1B |= (1<<WGM12)|(1<<CS10)|(1<<CS11);
-	OCR1A = 0;
+	TCCR1A = 0;
+	TCCR1B = 0;
+	OCR1A = 545;
+	OCR1B = 544;
+	TIMSK1 |= (1<<OCIE1A)|(1<<OCIE1B);
 }
 
 void printDisp(uint16_t dig){
@@ -107,7 +116,7 @@ void write_temp(uint16_t temperature){
 
 uint16_t measure_temperature(){
 	PORTB &= ~(1<<PORTB2);
-	_delay_ms(1);
+	_delay_us(1500);
 	uint16_t tmp_16 = SPIWrite(0x00);
 	tmp_16 <<= 8;
 	tmp_16 |= SPIWrite(0x00);
@@ -118,24 +127,29 @@ uint16_t measure_temperature(){
 		}else{
 			tmp_16 = 1;
 		}
-	
+	//_delay_ms(1);
 	PORTB |= (1<<PORTB2);
 	//_delay_ms(10);
 	return tmp_16;
 }
 
 int main(void){
-
+	uint8_t display_frequency = F_TIM / USER_DISPLAY_FREQUENCY - 1; 
+	uint8_t encoder_period = USER_ENCODER_PERIOD / 1000 * F_TIM; 
+	uint16_t time_measure = 80;
+	uint16_t pid_period = USER_PID_PERIOD / 1000 * F_TIM;
+	uint16_t delay_autoout = USER_DELAY_AUTOOUT / 1000 * F_TIM;
+	
 	uint16_t temperatures[2] = {100, 100};
 	
 	portInit();
-	pwmInit();
+	Tim1Init();
 	SPIMasterInit();
 	encInit(MAX_TEMP);
 	timer2Init_freq(F_TIM);
 	sei();
 	//write_temp(300); 
-	uint8_t cursor = 1;
+	uint8_t cursor = SET;
 	uint16_t temp_eeprom;
 	uint16_t temp_eeprom_16;
 	temp_eeprom = eeprom_read_byte(&temp_set_h);
@@ -143,42 +157,47 @@ int main(void){
 	temp_eeprom_16 = temp_eeprom_16 + ((temp_eeprom << 8) & 0xFFFF);
 	if(temp_eeprom_16 > MAX_TEMP) temp_eeprom_16 = START_TEMP;
 	temperatures[SET] = temp_eeprom_16;
+	printDisp(temperatures[SET]);
 	//settings PID
 	set_k(Kp, Ki, Kd);
 	set_limits(0, MAX_OUTPUT_PID);
 	
 	while (1){
-		if(flag_enc > ENCODER_PERIOD){
+		if(flag_enc > encoder_period){
 			if(encClick(&temperatures[SET])){
 				cursor = SET;
+				printDisp(temperatures[SET]);
 				time_delay = 0;
 			}
 			flag_enc = 0;
 		}
 		
-		if(flagDisp > DISPLAY_FREQUENCY){
-			printDisp(temperatures[cursor]);
+		if(flagDisp > display_frequency){
+			//printDisp(temperatures[cursor]);
 			outputDisp();
 		}
 		
-		if(flag_measure > TIME_MEASURE){
+		if(flag_measure > time_measure){
 			temperatures[CURRENT] = measure_temperature();
+			if(cursor == CURRENT){
+				printDisp(temperatures[CURRENT]);
+			}
 			flag_measure = 0;
 		}
 				
-		if(flag_pid > PID_PERIOD){
-			OCR1A = 1023 - (uint16_t)stepPID(temperatures[CURRENT]);
+		if(flag_pid > pid_period){
+			//OCR1A = 540 - (uint16_t)stepPID(temperatures[CURRENT]);
 			flag_pid = 0;
 		}
 
-		if(time_delay>DELAY_AUTOOUT){
+		if(time_delay>delay_autoout){
 			if(cursor>CURRENT){
 				#ifndef TEST
 				write_temp(temperatures[SET]);
 				#endif
 				set_setpoint(temperatures[SET]);
 				cursor = CURRENT;
-				//printDisp(temperatures[cursor]);
+				printDisp(temperatures[CURRENT]);
 			}
 			time_delay = 0;
 		}
@@ -187,6 +206,7 @@ int main(void){
 			//test function
 			temperatures[SET] = 300;
 			cursor = SET;
+			printDisp(temperatures[SET]);
 			time_delay = 0;
 		}
 		
@@ -200,3 +220,20 @@ ISR(TIMER2_COMPA_vect){
 	flag_measure++;
 	flag_pid++;
 }
+volatile uint16_t ocr_temp = 0;
+
+ISR(INT0_vect){
+	TCCR1B |= (1<<WGM12)|(1<<CS12);
+}
+
+ISR(TIMER1_COMPB_vect){
+	PORTB |= (1<<PORTB1);
+}
+
+ISR(TIMER1_COMPA_vect){
+	PORTB &= ~(1<<PORTB1);
+	TCCR1B = 0;
+}
+
+
+
