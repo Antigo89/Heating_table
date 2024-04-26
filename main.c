@@ -1,6 +1,6 @@
 #include "main.h"
 
-#define TEST
+//#define TEST
 
 uint8_t arrayChar[3] = {0,0,0};
 

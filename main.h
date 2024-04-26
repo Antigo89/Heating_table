@@ -1,8 +1,8 @@
 /*
  * @Author: Antigo
  * Mail: Antigo1989@gmail.com
- * Date: 03.12.2023
- * Version: 0.1
+ * Date: 26.04.2024
+ * Version: 1.0
  * Controller for Heating Table.
  * Control: Key (PB0)
  * TIARC: MOC3021 -> BCA16-600 (OC1A: PB1)
@@ -33,7 +33,7 @@
 //PID settings
 #define Kp  5
 #define USER_PID_PERIOD 1000 //ms
-#define MAX_OUTPUT_PID 530
+#define MAX_OUTPUT_PID 535
 #define MAX_TIM1 545
 
 //Display settings
@@ -44,7 +44,7 @@
 #define USER_ENCODER_PERIOD 100 //ms
 
 //Measurement settings 
-#define START_TEMP 30
+#define START_TEMP 250
 #define MAX_TEMP 400
 
 //array temperature[]
