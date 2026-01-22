@@ -1,14 +1,12 @@
 Thumbs.db
-/.metadata
-*.metadata
-*.settings
-/[Dd]ebug
-/.vs
-.vs
-*.launch
-*.elf
-*.o
-*.hex
-*.cproj
-*.atsln
-*.componentinfo.xml
+Heating table_atmega328p/Thumbs.db
+Heating table_atmega328p//.metadata
+Heating table_atmega328p/[Dd]ebug
+Heating table_atmega328p/.vs
+Heating table_atmega328p/*.launch
+Heating table_atmega328p/*.elf
+Heating table_atmega328p/*.o
+Heating table_atmega328p/*.hex
+Heating table_atmega328p/*.cproj
+Heating table_atmega328p/*.atsln
+Heating table_atmega328p/*.componentinfo.xml

@@ -39,7 +39,7 @@ void portInit(){
 	DDRB = 0x06;
 	DDRC = 0xFE;
 	DDRD = 0xE0;
-	PORTB = 0x04;
+	PORTB = 0x00;
 	PORTC = 0x00;
 	PORTD = 0xE0;	
 	EICRA |= (1<<ISC01);
@@ -124,9 +124,7 @@ uint16_t measure_temperature(){
 		}else{
 			tmp_16 = 1;
 		}
-	//_delay_ms(1);
 	PORTB |= (1<<PORTB2);
-	//_delay_ms(10);
 	return tmp_16;
 }
 
@@ -143,8 +141,8 @@ int main(void){
 	Tim1Init();
 	SPIMasterInit();
 	encInit(MAX_TEMP);
-	timer2Init_freq(F_TIM);
-	sei();
+	set_k(Kp);
+	
 	//write_temp(300); 
 	uint8_t cursor = SET;
 	uint16_t temp_eeprom;
@@ -154,9 +152,13 @@ int main(void){
 	temp_eeprom_16 = temp_eeprom_16 + ((temp_eeprom << 8) & 0xFFFF);
 	if(temp_eeprom_16 > MAX_TEMP) temp_eeprom_16 = START_TEMP;
 	temperatures[SET] = temp_eeprom_16;
+	
 	printDisp(temperatures[SET]);
-	//settings PID
-	set_k(Kp);
+	//Timer interrupt
+	timer2Init_freq(F_TIM);
+	sei();
+	_delay_ms(10);
+	PORTB |= (1<<PORTB2);
 	
 	while (1){
 		if(flag_enc > encoder_period){
